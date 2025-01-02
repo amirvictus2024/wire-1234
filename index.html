@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fa">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ساخت کانفیگ WireGuard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            background-color: #1c1c1c;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #2c2c2c;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            width: 320px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #f1f1f1;
+        }
+
+        label {
+            margin-bottom: 10px;
+            display: block;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        input,
+        select {
+            width: 90%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background-color: #444;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #005bb5;
+        }
+
+        a button {
+            background-color: #28a745;
+        }
+
+        a button:hover {
+            background-color: #218838;
+        }
+
+        .download-link {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>ساخت کانفیگ WireGuard</h1>
+        <form id="configForm">
+            <label for="privateKey">کلید خصوصی:</label>
+            <input type="text" id="privateKey" readonly>
+
+            <label for="publicKey">کلید عمومی:</label>
+            <input type="text" id="publicKey" readonly>
+
+            <label for="dns">DNS (انتخابی):</label>
+            <select id="dns">
+                <option value="10.202.10.10">10.202.10.10</option>
+                <option value="78.157.42.100">78.157.42.100</option>
+            </select>
+
+            <label for="allowedIPs">Allowed IPs:</label>
+            <input type="text" id="allowedIPs" value="10.202.10.11/32, 78.157.42.101/32">
+
+            <button type="submit">ساخت کانفیگ</button>
+        </form>
+
+        <div class="download-link" id="downloadLink">
+            <a href="#" download="wireguard_config.conf">
+                <button>دانلود کانفیگ</button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Function to generate the keypair
+            function generateKeypair() {
+                const privateKey = generatePrivateKey();
+                const publicKey = generatePublicKey(privateKey);
+                return {
+                    publicKey: keyToBase64(publicKey),
+                    privateKey: keyToBase64(privateKey)
+                };
+            }
+
+            // Function to generate the private key (random bytes)
+            function generatePrivateKey() {
+                const array = new Uint8Array(32);
+                window.crypto.getRandomValues(array);
+                return array;
+            }
+
+            // Function to generate the public key from the private key
+            function generatePublicKey(privateKey) {
+                // Here you would normally use a real key derivation algorithm
+                // For now, let's just return the private key as a placeholder
+                return privateKey;
+            }
+
+            // Function to convert key to base64
+            function keyToBase64(key) {
+                return btoa(String.fromCharCode.apply(null, key));
+            }
+
+            document.getElementById('configForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                // Generate keys
+                const keypair = generateKeypair();
+                const privateKey = keypair.privateKey;
+                const publicKey = keypair.publicKey;
+
+                // Get DNS and allowed IPs from the form
+                const dns = document.getElementById('dns').value;
+                const allowedIPs = document.getElementById('allowedIPs').value;
+
+                // Generate the WireGuard config file content
+                const config = `[Interface]
+PrivateKey = ${privateKey}
+Address = 10.202.10.10/32
+DNS = ${dns}, 94.103.125.157/32, 94.103.125.158/32
+
+[Peer]
+PublicKey = ${publicKey}
+AllowedIPs = ${allowedIPs}
+Endpoint = hellboyshop.top:443`;
+
+                // Create a Blob from the config and set up the download link
+                const blob = new Blob([config], { type: 'application/octet-stream' });
+                const downloadLink = document.getElementById('downloadLink');
+                const url = URL.createObjectURL(blob);
+
+                downloadLink.querySelector('a').href = url;
+                downloadLink.style.display = 'block';
+            });
+        })();
+    </script>
+</body>
+
+</html>
